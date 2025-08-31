@@ -3,18 +3,24 @@ import requests
 
 app = Flask(__name__)
 
-HF_URL = "https://Bencraft-clasificador-residuo-api.hf.space/run/predict"
+# URL de tu Space
+HF_SPACE_URL = "https://huggingface.co/spaces/Bencraft/clasificador-residuo-api/run/predict"
 
-@app.route("/proxy", methods=["POST"])
-def proxy():
-    data = request.json
+@app.route("/predict", methods=["POST"])
+def proxy_predict():
     try:
-        res = requests.post(HF_URL, json={"data": data["data"]})
-        res.raise_for_status()
-        return jsonify(res.json())
-    except Exception as e:
+        data = request.json
+        # Enviar al Space
+        resp = requests.post(HF_SPACE_URL, json=data, timeout=30)
+        resp.raise_for_status()
+        return jsonify(resp.json())
+    except requests.exceptions.RequestException as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route("/")
-def home():
+def index():
     return "Proxy corriendo 🚀"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
+
