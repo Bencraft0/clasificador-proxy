@@ -3,20 +3,27 @@ from flask_cors import CORS
 import requests
 
 app = Flask(__name__)
-CORS(app)  # Permite requests desde cualquier origen
+CORS(app)
 
-# URL de tu Space
-HF_SPACE_URL = "https://huggingface.co/spaces/Bencraft/clasificador-residuo-api/run/predict"
+# URL de la API de Hugging Face
+HF_SPACE_URL = "https://api-inference.huggingface.co/models/Bencraft/clasificador-residuo-api"
+HF_API_TOKEN = "hf_xxxxxxx"  # pegás acá tu token
 
 @app.route("/predict", methods=["POST"])
 def proxy_predict():
     try:
-        data = request.get_json()
-        # Enviar la request al Space
-        resp = requests.post(HF_SPACE_URL, json=data, timeout=30)
-        resp.raise_for_status()
+        data = request.json
+        base64_img = data.get("data")[0]  # viene del frontend
+
+        # Llamar a Hugging Face Inference API
+        resp = requests.post(
+            HF_SPACE_URL,
+            headers={"Authorization": f"Bearer {HF_API_TOKEN}"},
+            json={"inputs": base64_img},
+            timeout=60
+        )
         return jsonify(resp.json())
-    except requests.exceptions.RequestException as e:
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route("/")
