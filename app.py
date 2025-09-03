@@ -7,7 +7,8 @@ CORS(app)
 
 # URL de la API de Hugging Face
 HF_SPACE_URL = "https://api-inference.huggingface.co/models/Bencraft/clasificador-residuo-api"
-HF_API_TOKEN = "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"  # pegás acá tu token
+HF_API_TOKEN = os.getenv("HF_API_TOKEN")
+
 
 @app.route("/predict", methods=["POST"])
 def proxy_predict():
@@ -32,5 +33,6 @@ def index():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
 
 
