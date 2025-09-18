@@ -3,8 +3,8 @@ flask==3.0.3
 gunicorn==22.0.0
 flask-cors==3.0.10
 
-# OpenAI API
-openai==1.35.14
+# OpenAI API (actualizada)
+openai>=1.41.0
 
 # Dependencias necesarias de OpenAI
 httpx==0.28.1
@@ -30,5 +30,3 @@ idna==3.10
 h11==0.16.0
 annotated-types==0.7.0
 pydantic-core==2.33.2
-pydantic-core==2.33.2
-
