@@ -1,7 +1,7 @@
 # Servidor web
 flask==3.0.3
 gunicorn==22.0.0
-flask-cors==3.1.1
+flask-cors==3.0.10
 
 # OpenAI API
 openai==1.35.14
@@ -30,3 +30,5 @@ idna==3.10
 h11==0.16.0
 annotated-types==0.7.0
 pydantic-core==2.33.2
+pydantic-core==2.33.2
+
