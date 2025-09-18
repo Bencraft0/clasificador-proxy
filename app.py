@@ -4,9 +4,7 @@ import os
 from flask_cors import CORS
 
 app = Flask(__name__)
-
-# ⚠️ Solo permitir CORS desde tu dashboard
-CORS(app, origins=["https://bencraft0.github.io"])  # <-- reemplazá con tu URL real
+CORS(app, origins=["https://bencraft0.github.io"])  # Permitir tu dashboard
 
 # API Key de OpenAI desde variable de entorno
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -20,33 +18,27 @@ def predict():
 
         base64_img = data["data"][0]
 
-        # Llamada al modelo GPT para clasificación
-        response = openai.chat.completions.create(
+        # Llamada al modelo multimodal GPT-4o
+        response = openai.responses.create(
             model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "Eres un clasificador de residuos. Devuelve solo una etiqueta: plástico, papel, cartón, aluminio, tetra pak, material peligroso, otro."
-                },
+            input=[
                 {
                     "role": "user",
                     "content": [
-                        {"type": "input_text", "text": "Clasifica el residuo en la foto"},
+                        {"type": "input_text", "text": "Eres un clasificador de residuos. Devuelve solo una etiqueta: plástico, papel, cartón, aluminio, tetra pak, material peligroso, otro."},
                         {"type": "input_image", "image_url": base64_img}
                     ]
                 }
             ]
         )
 
-        # Extraer la etiqueta
-        label = response.choices[0].message.content.strip().lower()
+        # Extraer la respuesta (la etiqueta)
+        label = response.output[0].content[0].text.strip().lower()
         return jsonify({"label": label})
 
     except Exception as e:
+        print("ERROR PREDICT:", e)  # Ver logs en Render
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    # ⚠️ En producción usá gunicorn en Render
     app.run(host="0.0.0.0", port=5000, debug=True)
-
-
