@@ -4,7 +4,9 @@ import os
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app, origins=["https://bencraft0.github.io"])  # Permitir tu dashboard
+
+# ⚠️ Solo permitir CORS desde tu dashboard
+CORS(app, origins=["https://bencraft0.github.io"])  # reemplazá con tu URL real
 
 # API Key de OpenAI desde variable de entorno
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -38,8 +40,8 @@ def predict():
             ]
         )
 
-        # Extraer la etiqueta
-        label = response.output[0].content[0].text.strip().lower()
+        # Extraer la etiqueta usando output_text
+        label = getattr(response, "output_text", "").strip().lower() or "desconocido"
         return jsonify({"label": label})
 
     except Exception as e:
@@ -47,4 +49,5 @@ def predict():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
+    # ⚠️ En producción, usar gunicorn en Render
     app.run(host="0.0.0.0", port=5000, debug=True)
