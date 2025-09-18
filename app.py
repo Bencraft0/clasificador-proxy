@@ -6,7 +6,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 
 # ⚠️ Solo permitir CORS desde tu dashboard
-CORS(app, origins=["https://bencraft0.github.io/Brazo_Rob-tico-Dashboard/"])  # <-- reemplazá con tu URL real
+CORS(app, origins=["https://bencraft0.github.io"])  # <-- reemplazá con tu URL real
 
 # API Key de OpenAI desde variable de entorno
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -48,4 +48,5 @@ def predict():
 if __name__ == "__main__":
     # ⚠️ En producción usá gunicorn en Render
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
