@@ -1,39 +1,42 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS
-import requests
-import os          # <<--- esto faltaba
-from dotenv import load_dotenv
+from openai import OpenAI
+import os
 
 app = Flask(__name__)
-CORS(app)
 
-# URL de la API de Hugging Face
-HF_SPACE_URL = "https://api-inference.huggingface.co/models/Bencraft/clasificador-residuo-api"
-HF_API_TOKEN = os.getenv("HF_API_TOKEN")
-
+# ⚠️ Importante: poné tu API Key en una variable de entorno
+# Ejemplo en Windows PowerShell:
+#   setx OPENAI_API_KEY "tu_api_key"
+# Ejemplo en Linux/Mac:
+#   export OPENAI_API_KEY="tu_api_key"
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 @app.route("/predict", methods=["POST"])
-def proxy_predict():
+def predict():
     try:
-        data = request.json
-        base64_img = data.get("data")[0]  # viene del frontend
+        data = request.get_json()
+        if not data or "data" not in data:
+            return jsonify({"error": "No se recibió imagen"}), 400
 
-        # Llamar a Hugging Face Inference API
-        resp = requests.post(
-            HF_SPACE_URL,
-            headers={"Authorization": f"Bearer {HF_API_TOKEN}"},
-            json={"inputs": base64_img},
-            timeout=60
+        base64_img = data["data"][0]
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Eres un clasificador de residuos. Devuelve solo una etiqueta: plástico, papel, cartón, aluminio, tetra pak, material peligroso, otro."},
+                {"role": "user", "content": [
+                    {"type": "input_text", "text": "Clasifica el residuo en la foto"},
+                    {"type": "input_image", "image_url": base64_img}
+                ]}
+            ]
         )
-        return jsonify(resp.json())
+
+        label = response.choices[0].message.content.strip().lower()
+        return jsonify({"label": label})
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route("/")
-def index():
-    return "Proxy corriendo 🚀"
-
 if __name__ == "__main__":
-    import os
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    # ⚠️ En producción usá un server WSGI (gunicorn, uvicorn, etc.)
+    app.run(host="0.0.0.0", port=5000, debug=True)
