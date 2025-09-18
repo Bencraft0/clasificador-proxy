@@ -25,19 +25,25 @@ def predict():
                 {
                     "role": "user",
                     "content": [
-                        {"type": "input_text", "text": "Eres un clasificador de residuos. Devuelve solo una etiqueta: plástico, papel, cartón, aluminio, tetra pak, material peligroso, otro."},
-                        {"type": "input_image", "image_url": base64_img}
+                        {
+                            "type": "input_text",
+                            "text": "Eres un clasificador de residuos. Devuelve solo una etiqueta: plástico, papel, cartón, aluminio, tetra pak, material peligroso, otro."
+                        },
+                        {
+                            "type": "input_image",
+                            "image_url": base64_img
+                        }
                     ]
                 }
             ]
         )
 
-        # Extraer la respuesta (la etiqueta)
+        # Extraer la etiqueta
         label = response.output[0].content[0].text.strip().lower()
         return jsonify({"label": label})
 
     except Exception as e:
-        print("ERROR PREDICT:", e)  # Ver logs en Render
+        print("ERROR PREDICT:", e)
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
