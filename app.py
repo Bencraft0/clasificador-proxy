@@ -1,11 +1,14 @@
 from flask import Flask, request, jsonify
 import openai
 import os
+from flask_cors import CORS
 
 app = Flask(__name__)
 
-# ⚠️ Importante: poné tu API Key en una variable de entorno en Render
-# Ejemplo en Render: Environment -> ADD ENV VAR -> Name: OPENAI_API_KEY, Value: tu_api_key
+# ⚠️ Solo permitir CORS desde tu dashboard
+CORS(app, origins=["https://tuusuario.github.io"])  # <-- reemplazá con tu URL real
+
+# API Key de OpenAI desde variable de entorno
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 @app.route("/predict", methods=["POST"])
@@ -43,6 +46,5 @@ def predict():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    # ⚠️ En producción usá gunicorn en Render, esto solo es para local
+    # ⚠️ En producción usá gunicorn en Render
     app.run(host="0.0.0.0", port=5000, debug=True)
-
