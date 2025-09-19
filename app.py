@@ -29,7 +29,9 @@ def predict():
                     "content": [
                         {
                             "type": "input_text",
-                            "text": "Eres un clasificador de residuos. Devuelve solo una etiqueta: plástico, papel, cartón, aluminio, tetra pak, material peligroso, otro."
+                            "text": "Eres un clasificador de residuos. Ignora todo lo que no sea un residuo. 
+                            Solo devuelve plástico, papel, cartón, aluminio, tetra pak o material peligroso.
+                            Si no hay nada que clasificar, devuelve otro."
                         },
                         {
                             "type": "input_image",
@@ -51,3 +53,4 @@ def predict():
 if __name__ == "__main__":
     # ⚠️ En producción, usar gunicorn en Render
     app.run(host="0.0.0.0", port=5000, debug=True)
+
