@@ -6,7 +6,7 @@ gunicorn==22.0.0
 # --- Inteligencia Artificial y procesamiento de imágenes ---
 torch==2.8.0
 transformers==4.42.2
-Pillow==10.0.1
+Pillow==9.5.0
 numpy==1.26.0
 
 # --- Interfaz de prueba / debug ---
