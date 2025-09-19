@@ -1,12 +1,29 @@
 from flask import Flask, request, jsonify
 import openai
 import os
+import base64
+import numpy as np
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app, origins=["https://bencraft0.github.io"])  # tu dashboard
+CORS(app, origins=["https://bencraft0.github.io"])  # reemplaza con tu URL real
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# Lista de categorías
+CATEGORIES = ["plástico", "papel", "cartón", "aluminio", "tetra pak", "material peligroso"]
+
+# Precomputamos los embeddings de cada categoría
+category_embeddings = {}
+for cat in CATEGORIES:
+    res = openai.embeddings.create(
+        input=cat,
+        model="text-embedding-3-small"
+    )
+    category_embeddings[cat] = np.array(res.data[0].embedding)
+
+def cosine_similarity(a, b):
+    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -17,43 +34,28 @@ def predict():
 
         base64_img = data["data"][0]
 
-        prompt = (
-            "Eres un clasificador de residuos. Siempre devuelve una de estas categorías: "
-            "plástico, papel, cartón, aluminio, tetra pak, material peligroso. "
-            "No uses otro ni desconocido. "
-            "Si no estás seguro, elige la categoría que más se parezca. "
-            "Opcionalmente, agrega una subetiqueta describiendo el objeto (botella, lata, caja...)."
+        # Convertimos la imagen base64 a URL para el API
+        # Si la API acepta directamente base64, la enviamos así
+        res = openai.embeddings.create(
+            input=[base64_img],
+            model="image-embedding-3-small"
         )
+        img_embedding = np.array(res.data[0].embedding)
 
-        response = openai.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": prompt},
-                {"role": "user", "content": [
-                    {"type": "input_text", "text": "Clasifica el residuo en la foto"},
-                    {"type": "input_image", "image_url": base64_img}
-                ]}
-            ]
-        )
+        # Comparamos con las categorías
+        best_cat = None
+        best_score = -1
+        for cat, emb in category_embeddings.items():
+            score = cosine_similarity(img_embedding, emb)
+            if score > best_score:
+                best_score = score
+                best_cat = cat
 
-        label_text = response.choices[0].message.content.strip().lower()
-
-        # Intentamos separar categoría y subetiqueta si el modelo lo devuelve como JSON simple
-        import json
-        try:
-            label_json = json.loads(label_text)
-            categoria = label_json.get("categoria", "plástico")
-            subcategoria = label_json.get("subcategoria", "")
-        except:
-            # Si no es JSON, usamos toda la respuesta como categoría y subcategoria vacía
-            categoria = label_text.split()[0] if label_text else "plástico"
-            subcategoria = ""
-
-        return jsonify({"categoria": categoria, "subcategoria": subcategoria})
+        # Devolvemos categoría
+        return jsonify({"categoria": best_cat, "score": float(best_score)})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
-
